@@ -1,0 +1,486 @@
+import React, { useState, useEffect } from 'react';
+
+// === DATA MOCKUP ===
+// This section contains mock data to simulate a database.
+// In a real application, this data would be fetched from a backend API.
+
+const celebrities = [
+  {
+    id: 1,
+    name: 'Jane Doe',
+    bio: 'Jane is a renowned actress and philanthropist known for her roles in "The Starry Night" and "City of Echoes." She is a global ambassador for several charities.',
+    publicGallery: [
+      'https://placehold.co/600x400/F5F5F5/4B5563?text=Jane+Doe+Photo+1',
+      'https://placehold.co/600x400/E5E7EB/4B5563?text=Jane+Doe+Photo+2',
+      'https://placehold.co/600x400/D1D5DB/4B5563?text=Jane+Doe+Photo+3',
+    ],
+    exclusiveContent: {
+      gallery: [
+        'https://placehold.co/600x400/1F2937/F9FAFB?text=Exclusive+Jane+Doe+1',
+        'https://placehold.co/600x400/374151/F9FAFB?text=Exclusive+Jane+Doe+2',
+      ],
+      news: 'Exclusive news: Jane is preparing for a new sci-fi movie role and will begin filming next month!',
+    },
+  },
+  {
+    id: 2,
+    name: 'John Smith',
+    bio: 'John is a chart-topping singer-songwriter who has captivated audiences worldwide with his soulful voice. His latest album, "Melodies of the Heart," is a global sensation.',
+    publicGallery: [
+      'https://placehold.co/600x400/F5F5F5/4B5563?text=John+Smith+Photo+1',
+      'https://placehold.co/600x400/E5E7EB/4B5563?text=John+Smith+Photo+2',
+      'https://placehold.co/600x400/D1D5DB/4B5563?text=John+Smith+Photo+3',
+    ],
+    exclusiveContent: {
+      gallery: [
+        'https://placehold.co/600x400/1F2937/F9FAFB?text=Exclusive+John+Smith+1',
+        'https://placehold.co/600x400/374151/F9FAFB?text=Exclusive+John+Smith+2',
+      ],
+      news: 'Exclusive news: John is planning a surprise world tour with new acoustic tracks. Stay tuned for dates!',
+    },
+  },
+];
+
+const mockUsers = [
+  {
+    id: 1,
+    username: 'regularfan',
+    email: 'regular@example.com',
+    password: 'password123',
+    isPremium: false,
+    favoriteCelebrityId: 1,
+  },
+  {
+    id: 2,
+    username: 'premiumfan',
+    email: 'premium@example.com',
+    password: 'password123',
+    isPremium: true,
+    favoriteCelebrityId: 2,
+  },
+];
+
+// === REACT APPLICATION ===
+// This is the main component for the entire application.
+
+function App() {
+  // === STATE MANAGEMENT ===
+  // State to manage the user's authentication and data.
+  const [currentUser, setCurrentUser] = useState(null);
+  const [view, setView] = useState('login'); // 'login', 'register', 'profile', 'celebrity', 'payment'
+  const [selectedCelebrity, setSelectedCelebrity] = useState(null);
+  const [message, setMessage] = useState(null); // Used for notifications
+
+  // === UI COMPONENTS ===
+  // Reusable components for the different views.
+
+  const Message = ({ text }) => (
+    <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg my-4" role="alert">
+      <p>{text}</p>
+    </div>
+  );
+
+  const LoginForm = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      const user = mockUsers.find(u => u.email === email && u.password === password);
+      if (user) {
+        setCurrentUser(user);
+        setMessage('Login successful!');
+        setView('profile');
+      } else {
+        setMessage('Invalid email or password.');
+      }
+    };
+
+    return (
+      <div className="w-full max-w-md mx-auto p-8 space-y-6 bg-white rounded-xl shadow-lg">
+        <h2 className="text-3xl font-bold text-center text-gray-800">Login</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Log In
+          </button>
+        </form>
+        <div className="text-center text-sm text-gray-600">
+          Don't have an account?{' '}
+          <button onClick={() => setView('register')} className="font-medium text-indigo-600 hover:text-indigo-500">
+            Sign Up
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const RegisterForm = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [username, setUsername] = useState('');
+    const [favoriteCelebrityId, setFavoriteCelebrityId] = useState('');
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      const userExists = mockUsers.some(u => u.email === email);
+      if (userExists) {
+        setMessage('An account with this email already exists.');
+        return;
+      }
+      const newUser = {
+        id: mockUsers.length + 1,
+        username,
+        email,
+        password,
+        isPremium: false,
+        favoriteCelebrityId: parseInt(favoriteCelebrityId),
+      };
+      mockUsers.push(newUser); // Simulate saving new user
+      setCurrentUser(newUser);
+      setMessage('Registration successful! You are now logged in.');
+      setView('profile');
+    };
+
+    return (
+      <div className="w-full max-w-md mx-auto p-8 space-y-6 bg-white rounded-xl shadow-lg">
+        <h2 className="text-3xl font-bold text-center text-gray-800">Sign Up</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Username</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Favorite Celebrity</label>
+            <select
+              value={favoriteCelebrityId}
+              onChange={(e) => setFavoriteCelebrityId(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+              required
+            >
+              <option value="">Select a celebrity</option>
+              {celebrities.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="submit"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            Register
+          </button>
+        </form>
+        <div className="text-center text-sm text-gray-600">
+          Already have an account?{' '}
+          <button onClick={() => setView('login')} className="font-medium text-indigo-600 hover:text-indigo-500">
+            Log In
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const ProfilePage = () => {
+    if (!currentUser) {
+      return <div>Please log in to view your profile.</div>;
+    }
+    const favoriteCelebrity = celebrities.find(c => c.id === currentUser.favoriteCelebrityId);
+
+    const handleUpgrade = () => {
+      setMessage('Redirecting to payment...');
+      setTimeout(() => setView('payment'), 1000);
+    };
+
+    return (
+      <div className="w-full max-w-3xl mx-auto p-8 bg-white rounded-xl shadow-lg">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Your Profile</h2>
+        <div className="space-y-4">
+          <p>
+            <span className="font-bold">Username:</span> {currentUser.username}
+          </p>
+          <p>
+            <span className="font-bold">Email:</span> {currentUser.email}
+          </p>
+          <p>
+            <span className="font-bold">Fan Status:</span>{' '}
+            {currentUser.isPremium ? (
+              <span className="text-purple-600 font-semibold">Premium Fan</span>
+            ) : (
+              <span className="text-gray-500">Regular Fan</span>
+            )}
+          </p>
+          <p>
+            <span className="font-bold">Favorite Celebrity:</span>{' '}
+            {favoriteCelebrity ? favoriteCelebrity.name : 'Not set'}
+          </p>
+          {!currentUser.isPremium && (
+            <button
+              onClick={handleUpgrade}
+              className="mt-4 w-full sm:w-auto py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+              Upgrade to Premium
+            </button>
+          )}
+        </div>
+        <div className="mt-8 text-center">
+          <button onClick={() => setView('celebrity')} className="text-indigo-600 hover:underline">
+            Go to Celebrity Page
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const CelebrityPage = () => {
+    if (!selectedCelebrity) {
+      return <div>Please select a celebrity.</div>;
+    }
+
+    const isPremium = currentUser?.isPremium;
+    const isFavorite = currentUser?.favoriteCelebrityId === selectedCelebrity.id;
+
+    return (
+      <div className="w-full max-w-4xl mx-auto p-8 bg-white rounded-xl shadow-lg">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">{selectedCelebrity.name}</h2>
+          <button onClick={() => setView('profile')} className="py-2 px-4 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300">
+            Back to Profile
+          </button>
+        </div>
+        
+        {isFavorite && (
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg my-4" role="alert">
+            <p className="font-bold">Your Favorite!</p>
+            <p>You selected {selectedCelebrity.name} as your favorite celebrity.</p>
+          </div>
+        )}
+
+        <div className="space-y-8">
+          {/* Public Content */}
+          <div>
+            <h3 className="text-2xl font-semibold mb-4 text-gray-700">Biography</h3>
+            <p className="text-gray-600">{selectedCelebrity.bio}</p>
+          </div>
+          <div>
+            <h3 className="text-2xl font-semibold mb-4 text-gray-700">Public Gallery</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {selectedCelebrity.publicGallery.map((img, index) => (
+                <div key={index} className="rounded-lg overflow-hidden shadow-md">
+                  <img src={img} alt={`Public gallery image ${index + 1}`} className="w-full h-auto" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h3 className="text-2xl font-semibold mb-4 text-gray-700">Fan Comments</h3>
+            <div className="bg-gray-100 p-4 rounded-lg">
+              <p className="text-gray-500">Fan comments section coming soon!</p>
+            </div>
+          </div>
+
+          {/* Premium Content */}
+          {isPremium ? (
+            <div className="mt-10 p-6 bg-purple-50 rounded-xl border-2 border-purple-300 shadow-inner space-y-6">
+              <h3 className="text-2xl font-semibold text-purple-700">Exclusive Premium Content 🔒</h3>
+              <div>
+                <h4 className="text-xl font-medium text-purple-600 mb-2">Exclusive Gallery</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {selectedCelebrity.exclusiveContent.gallery.map((img, index) => (
+                    <div key={index} className="rounded-lg overflow-hidden shadow-md">
+                      <img src={img} alt={`Exclusive gallery image ${index + 1}`} className="w-full h-auto" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="text-xl font-medium text-purple-600 mb-2">Exclusive News Feed</h4>
+                <p className="text-purple-800 bg-purple-100 p-4 rounded-lg">{selectedCelebrity.exclusiveContent.news}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-10 p-6 bg-gray-100 rounded-xl border-2 border-gray-300 shadow-inner">
+              <p className="text-center text-gray-600">Upgrade to Premium to unlock exclusive content!</p>
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => setView('payment')}
+                  className="py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+                >
+                  Upgrade Now
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+  
+  const PaymentPage = () => {
+    const handlePayment = () => {
+      const updatedUser = { ...currentUser, isPremium: true };
+      const userIndex = mockUsers.findIndex(u => u.id === currentUser.id);
+      if (userIndex !== -1) {
+        mockUsers[userIndex] = updatedUser; // Simulate database update
+      }
+      setCurrentUser(updatedUser);
+      setMessage('Payment successful! You are now a Premium Fan.');
+      setView('profile');
+    };
+  
+    return (
+      <div className="w-full max-w-md mx-auto p-8 space-y-6 bg-white rounded-xl shadow-lg">
+        <h2 className="text-3xl font-bold text-center text-gray-800">Premium Membership</h2>
+        <div className="space-y-4 text-center">
+          <p className="text-lg text-gray-700">Simulated Payment</p>
+          <p className="text-gray-500">This is a mock payment process. No real card information is needed.</p>
+          <button
+            onClick={handlePayment}
+            className="w-full py-3 px-6 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Pay Now ($9.99)
+          </button>
+        </div>
+        <div className="text-center">
+          <button onClick={() => setView('profile')} className="font-medium text-gray-600 hover:text-gray-500">
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // === NAVIGATION AND ROUTING LOGIC ===
+  // Simple view management based on state.
+
+  useEffect(() => {
+    // Set the initial celebrity view to the current user's favorite.
+    if (currentUser && view === 'profile') {
+      const favorite = celebrities.find(c => c.id === currentUser.favoriteCelebrityId);
+      if (favorite) {
+        setSelectedCelebrity(favorite);
+      }
+    }
+  }, [currentUser, view]);
+
+  const renderContent = () => {
+    switch (view) {
+      case 'login':
+        return <LoginForm />;
+      case 'register':
+        return <RegisterForm />;
+      case 'profile':
+        return <ProfilePage />;
+      case 'celebrity':
+        return <CelebrityPage />;
+      case 'payment':
+        return <PaymentPage />;
+      default:
+        return <LoginForm />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10 px-4 font-sans">
+      <style>{`
+        body {
+          font-family: 'Inter', sans-serif;
+        }
+      `}</style>
+
+      {/* Header and Logout button */}
+      <header className="w-full max-w-4xl flex justify-between items-center py-4 px-8 mb-8 bg-white rounded-xl shadow-md">
+        <h1 className="text-2xl font-bold text-gray-800">Celebrity Fan Hub</h1>
+        {currentUser && (
+          <button
+            onClick={() => {
+              setCurrentUser(null);
+              setView('login');
+              setMessage('Logged out successfully.');
+            }}
+            className="py-2 px-4 bg-red-500 text-white rounded-md hover:bg-red-600"
+          >
+            Logout
+          </button>
+        )}
+      </header>
+
+      {/* Main Content Area */}
+      <main className="w-full max-w-4xl">
+        {message && <Message text={message} />}
+        {renderContent()}
+      </main>
+
+      {/* Vercel.json content */}
+      <div className="mt-10 p-6 bg-gray-800 text-white rounded-xl shadow-lg w-full max-w-4xl">
+        <h3 className="text-xl font-semibold mb-4">Vercel Configuration to fix 404</h3>
+        <p className="text-gray-300 mb-2">
+          Create a file named `vercel.json` in the root of your project with the following content. This
+          tells Vercel to redirect all traffic to `index.html` so your React router can handle the pages.
+        </p>
+        <pre className="bg-gray-900 p-4 rounded-lg overflow-x-auto">
+          <code>
+{`{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}`}
+          </code>
+        </pre>
+      </div>
+    </div>
+  );
+}
+
+export default App;
